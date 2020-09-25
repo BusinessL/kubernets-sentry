@@ -1,0 +1,80 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: sentry-deployment
+  namespace: sentry
+  labels:
+    layer: sentry
+    env: all
+    app: sentry
+    name: sentry-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        layer: sentry
+        env: all
+        app: sentry
+        name: sentry-server
+    spec:
+      containers:
+        - name: sentry
+          image: sentry:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9000
+          env:
+            - name: SENTRY_SECRET_KEY
+              value: ")(mjdgi6)=-3(okh1@rjpcbz08qh&6!-p2b^w366@1ucedu+x("
+            - name: SENTRY_POSTGRES_HOST
+              value: "postgres"
+            - name: SENTRY_DB_PASSWORD
+              value: "secret"
+            - name: SENTRY_DB_USER
+              value: "sentry"
+            - name: C_FORCE_ROOT
+              value: "true"
+            - name: SENTRY_EMAIL_BACKEND
+              value: "smtp"
+            - name: SENTRY_EMAIL_HOST
+              value: "smtp.exmail.qq.com"
+            - name: SENTRY_EMAIL_PORT
+              value: "587"
+            - name: SENTRY_EMAIL_USER
+              value: ""
+            - name: SENTRY_SERVER_EMAIL
+              value: ""
+            - name: SENTRY_EMAIL_PASSWORD
+              value: ""
+            - name: SENTRY_EMAIL_USE_TLS
+              value: "true"
+          volumeMounts:
+            - mountPath: /var/lib/sentry/files
+              name: data
+      volumes:
+        - name: data
+          hostPath:
+            path: /opt/sentry/data
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: sentry-svc
+  namespace: sentry
+  labels:
+    layer: sentry
+    env: all
+    app: sentry
+    name: sentry-server
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+  selector:
+    layer: sentry
+    env: all
+    app: sentry
+    name: sentry-server
